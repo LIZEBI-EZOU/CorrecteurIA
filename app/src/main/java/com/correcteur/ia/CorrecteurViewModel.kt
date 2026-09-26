@@ -22,8 +22,8 @@ data class CorrecteurState(
     val vocabulary: List<String> = emptyList(),
     val protectedWords: List<String> = emptyList(),
     val learnedReplacements: Map<String, String> = emptyMap(),
-    val openAiConnected: Boolean = false,
-    val onlineAvailable: Boolean = false
+    val onlineAvailable: Boolean = false,
+    val serverAvailable: Boolean = false
 )
 
 class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
@@ -37,8 +37,8 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
             vocabulary = memory.vocabulary(),
             protectedWords = memory.protectedWords(),
             learnedReplacements = memory.learnedReplacements(),
-            openAiConnected = memory.openAiApiKey().isNotBlank(),
-            onlineAvailable = OnlineRewriter.hasInternet(app.applicationContext)
+            onlineAvailable = OnlineRewriter.hasInternet(app.applicationContext),
+            serverAvailable = false
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -55,18 +55,21 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    fun setOpenAiApiKey(value: String) {
-        memory.setOpenAiApiKey(value)
-        _uiState.value = _uiState.value.copy(openAiConnected = value.isNotBlank(), message = if (value.isBlank()) "Accès en ligne retiré." else "Accès IA en ligne configuré.")
-    }
-
-    fun clearOpenAiApiKey() {
-        memory.clearOpenAiApiKey()
-        _uiState.value = _uiState.value.copy(openAiConnected = false, message = "Accès IA en ligne retiré.")
-    }
-
     fun refreshConnectivity() {
-        _uiState.value = _uiState.value.copy(onlineAvailable = OnlineRewriter.hasInternet(getApplication<Application>().applicationContext))
+        viewModelScope.launch {
+            val context = getApplication<Application>().applicationContext
+            val online = OnlineRewriter.hasInternet(context)
+            val server = online && withContext(Dispatchers.IO) { OnlineRewriter.serverAvailable() }
+            _uiState.value = _uiState.value.copy(
+                onlineAvailable = online,
+                serverAvailable = server,
+                message = when {
+                    !online -> "Hors connexion — les moteurs locaux sont disponibles."
+                    server -> "Internet et serveur CorrecteurIA disponibles."
+                    else -> "Internet disponible, mais le serveur CorrecteurIA est indisponible."
+                }
+            )
+        }
     }
 
     fun setInput(value: String) {
@@ -126,26 +129,30 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
         if (original.isBlank()) return
 
         viewModelScope.launch {
-            val online = _uiState.value.internetEnabled
+            val context = getApplication<Application>().applicationContext
+            val online = OnlineRewriter.hasInternet(context)
+            val server = online && withContext(Dispatchers.IO) { OnlineRewriter.serverAvailable() }
             _uiState.value = _uiState.value.copy(
                 busy = true,
-                message = if (online) "Correction hybride avec mémoire personnelle…" else "Correction locale avec mémoire personnelle…"
+                onlineAvailable = online,
+                serverAvailable = server,
+                message = if (online && server) "Correction en ligne via CorrecteurIA…" else "Correction locale avec mémoire personnelle…"
             )
 
             val (prepared, restore) = memory.protect(original)
             var result: String? = null
             var mode = "Hors connexion"
 
-            if (online) {
+            if (online && server) {
                 result = withContext(Dispatchers.IO) { InternetCorrector.correct(prepared) }
-                if (result != null) mode = "Internet"
+                if (result != null) mode = "Serveur CorrecteurIA"
             }
 
             if (result == null) {
                 val local = withContext(Dispatchers.Default) { LanguageToolCorrector.correct(prepared) }
                 val aiResult = ai.proofreadFrench(local)
                 result = aiResult ?: local
-                if (aiResult != null) mode = "IA locale"
+                mode = if (aiResult != null) "IA locale" else "Correcteur local"
             }
 
             result = memory.restore(result.orEmpty(), restore)
@@ -169,29 +176,35 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
             val state = _uiState.value
             val context = getApplication<Application>().applicationContext
             val online = OnlineRewriter.hasInternet(context)
+            val server = online && withContext(Dispatchers.IO) { OnlineRewriter.serverAvailable() }
+
             _uiState.value = state.copy(
                 busy = true,
                 onlineAvailable = online,
-                message = if (online) "Reformulation en ligne — " + state.style + "…" else "Aucune connexion : reformulation locale…"
+                serverAvailable = server,
+                message = when {
+                    !online -> "Aucune connexion : reformulation locale hors ligne…"
+                    server -> "Reformulation en ligne via CorrecteurIA — ${state.style}…"
+                    else -> "Internet disponible, serveur indisponible : la reformulation locale reste désactivée."
+                }
             )
 
             val (prepared, restore) = memory.protect(original)
-            val key = memory.openAiApiKey()
             var result: String? = null
             var mode: String
 
             if (online) {
-                if (key.isNotBlank()) {
+                if (server) {
                     result = withContext(Dispatchers.IO) {
-                        OnlineRewriter.rewrite(prepared, state.style, state.rewriteIntensity, key)
+                        OnlineRewriter.rewrite(prepared, state.style, state.rewriteIntensity)
                     }
-                    mode = if (result != null) "IA en ligne" else "Service en ligne indisponible"
+                    mode = if (result != null) "IA en ligne via CorrecteurIA" else "Serveur IA indisponible"
                 } else {
-                    mode = "Internet sans accès IA"
+                    mode = "Serveur CorrecteurIA indisponible"
                 }
 
                 if (result == null) {
-                    result = "Internet est disponible. Configurez l’accès IA dans ☰ > Connexion et IA en ligne pour reformuler. Le moteur local reste désactivé tant qu’Internet est disponible."
+                    result = "Internet est disponible mais le serveur CorrecteurIA n’est pas accessible. Le moteur local reste volontairement désactivé tant qu’Internet est disponible."
                 }
             } else {
                 val aiResult = ai.rewriteFrench(
@@ -218,8 +231,8 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
                 output = result,
                 busy = false,
                 onlineAvailable = online,
-                openAiConnected = memory.openAiApiKey().isNotBlank(),
-                message = if (online && key.isBlank()) "Internet détecté : moteur local désactivé. Configurez l’IA en ligne." else "Reformulation terminée — " + mode + ".",
+                serverAvailable = server,
+                message = if (online && !server) "Serveur indisponible : moteur local désactivé tant qu’Internet est disponible." else "Reformulation terminée — " + mode + ".",
                 history = memory.history()
             )
         }
