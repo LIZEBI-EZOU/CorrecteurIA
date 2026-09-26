@@ -49,14 +49,14 @@ class MainActivity:ComponentActivity(){override fun onCreate(b:Bundle?){super.on
    Text("🧠 Mémoire personnelle avancée",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.ExtraBold,color=DeepBlue)
    Text("Tout reste sur cet appareil : vocabulaire, mots protégés et corrections préférées.")
    OutlinedTextField(vocab,{vocab=it},Modifier.fillMaxWidth(),label={Text("Ajouter au vocabulaire")},singleLine=true,shape=RoundedCornerShape(14.dp))
-   Button(onClick={if(vocab.isNotBlank()){vm.addVocabulary(vocab);vocab=""}},enabled=vocab.isNotBlank()},colors=ButtonDefaults.buttonColors(containerColor=Blue)){Text("➕ Mémoriser ce mot")}
+   Button(onClick={if(vocab.isNotBlank()){vm.addVocabulary(vocab);vocab=""}},enabled=vocab.isNotBlank(),colors=ButtonDefaults.buttonColors(containerColor=Blue)){Text("➕ Mémoriser ce mot")}
    if(s.vocabulary.isNotEmpty()){Text("Vocabulaire : "+s.vocabulary.joinToString(" • "));TextButton(onClick={vm.removeVocabulary(s.vocabulary.last())}){Text("Retirer le dernier")}}
    OutlinedTextField(protected,{protected=it},Modifier.fillMaxWidth(),label={Text("Mot à ne jamais corriger")},singleLine=true,shape=RoundedCornerShape(14.dp))
-   Button(onClick={if(protected.isNotBlank()){vm.addProtectedWord(protected);protected=""}},enabled=protected.isNotBlank()},colors=ButtonDefaults.buttonColors(containerColor=Red)){Text("🛡️ Protéger ce mot")}
+   Button(onClick={if(protected.isNotBlank()){vm.addProtectedWord(protected);protected=""}},enabled=protected.isNotBlank(),colors=ButtonDefaults.buttonColors(containerColor=Red)){Text("🛡️ Protéger ce mot")}
    if(s.protectedWords.isNotEmpty()){Text("Protégés : "+s.protectedWords.joinToString(" • "));TextButton(onClick={vm.removeProtectedWord(s.protectedWords.last())}){Text("Retirer le dernier")}}
    Text("🔁 Correction préférée",fontWeight=FontWeight.Bold,color=DeepBlue)
    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){OutlinedTextField(from,{from=it},Modifier.weight(1f),label={Text("Avant")},singleLine=true);OutlinedTextField(to,{to=it},Modifier.weight(1f),label={Text("Après")},singleLine=true)}
-   Button(onClick={if(from.isNotBlank()&&to.isNotBlank()){vm.learnReplacement(from,to);from="";to=""}},enabled=from.isNotBlank()&&to.isNotBlank()},colors=ButtonDefaults.buttonColors(containerColor=Blue)){Text("🧠 Apprendre cette correction")}
+   Button(onClick={if(from.isNotBlank()&&to.isNotBlank()){vm.learnReplacement(from,to);from="";to=""}},enabled=from.isNotBlank()&&to.isNotBlank(),colors=ButtonDefaults.buttonColors(containerColor=Blue)){Text("🧠 Apprendre cette correction")}
    if(s.learnedReplacements.isNotEmpty()){Text("Préférences mémorisées :");s.learnedReplacements.entries.take(8).forEach{(a,b)->Text("• $a → $b")};TextButton(onClick={vm.removeReplacement(s.learnedReplacements.keys.last())}){Text("Oublier la dernière")}}
    HorizontalDivider()
    Text("🗂️ Historique",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.ExtraBold,color=DeepBlue)
