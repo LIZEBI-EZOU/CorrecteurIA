@@ -1,6 +1,8 @@
 package com.correcteur.ia
 
 import android.content.Context
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -8,6 +10,13 @@ data class MemoryItem(val input: String, val output: String, val mode: String, v
 
 class MemoryStore(context: Context) {
     private val p = context.getSharedPreferences("correcteur_memory", Context.MODE_PRIVATE)
+    private val secure = EncryptedSharedPreferences.create(
+        context,
+        "correcteur_secure",
+        MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build(),
+        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+    )
 
     fun isInternetEnabled() = p.getBoolean("internet_enabled", true)
     fun setInternetEnabled(value: Boolean) = p.edit().putBoolean("internet_enabled", value).apply()
@@ -18,9 +27,9 @@ class MemoryStore(context: Context) {
     fun rewriteIntensity() = p.getString("rewrite_intensity", "Équilibré") ?: "Équilibré"
     fun setRewriteIntensity(value: String) = p.edit().putString("rewrite_intensity", value).apply()
 
-    fun openAiApiKey() = p.getString("openai_api_key", "") ?: ""
-    fun setOpenAiApiKey(value: String) = p.edit().putString("openai_api_key", value.trim()).apply()
-    fun clearOpenAiApiKey() = p.edit().remove("openai_api_key").apply()
+    fun openAiApiKey() = secure.getString("openai_api_key", "") ?: ""
+    fun setOpenAiApiKey(value: String) = secure.edit().putString("openai_api_key", value.trim()).apply()
+    fun clearOpenAiApiKey() = secure.edit().remove("openai_api_key").apply()
 
     fun vocabulary(): List<String> = readStrings("vocabulary")
     fun protectedWords(): List<String> = readStrings("protected_words")
@@ -110,7 +119,7 @@ class MemoryStore(context: Context) {
 
     fun clearPersonalMemory() = p.edit()
         .remove("vocabulary").remove("protected_words").remove("learned_replacements")
-        .remove("style").remove("rewrite_intensity").remove("openai_api_key").apply()
+        .remove("style").remove("rewrite_intensity").apply()
 
     fun clear() = p.edit()
         .remove("history").remove("vocabulary").remove("protected_words")

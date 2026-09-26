@@ -21,7 +21,9 @@ data class CorrecteurState(
     val rewriteIntensity: String = "Équilibré",
     val vocabulary: List<String> = emptyList(),
     val protectedWords: List<String> = emptyList(),
-    val learnedReplacements: Map<String, String> = emptyMap()
+    val learnedReplacements: Map<String, String> = emptyMap(),
+    val openAiConnected: Boolean = false,
+    val onlineAvailable: Boolean = false
 )
 
 class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
@@ -34,7 +36,9 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
             rewriteIntensity = memory.rewriteIntensity(),
             vocabulary = memory.vocabulary(),
             protectedWords = memory.protectedWords(),
-            learnedReplacements = memory.learnedReplacements()
+            learnedReplacements = memory.learnedReplacements(),
+            openAiConnected = memory.openAiApiKey().isNotBlank(),
+            onlineAvailable = OnlineRewriter.hasInternet(app.applicationContext)
         )
     )
     val uiState = _uiState.asStateFlow()
@@ -49,6 +53,20 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
             learnedReplacements = memory.learnedReplacements(),
             message = message ?: _uiState.value.message
         )
+    }
+
+    fun setOpenAiApiKey(value: String) {
+        memory.setOpenAiApiKey(value)
+        _uiState.value = _uiState.value.copy(openAiConnected = value.isNotBlank(), message = if (value.isBlank()) "Accès en ligne retiré." else "Accès IA en ligne configuré.")
+    }
+
+    fun clearOpenAiApiKey() {
+        memory.clearOpenAiApiKey()
+        _uiState.value = _uiState.value.copy(openAiConnected = false, message = "Accès IA en ligne retiré.")
+    }
+
+    fun refreshConnectivity() {
+        _uiState.value = _uiState.value.copy(onlineAvailable = OnlineRewriter.hasInternet(getApplication<Application>().applicationContext))
     }
 
     fun setInput(value: String) {
@@ -149,42 +167,59 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
 
         viewModelScope.launch {
             val state = _uiState.value
+            val context = getApplication<Application>().applicationContext
+            val online = OnlineRewriter.hasInternet(context)
             _uiState.value = state.copy(
                 busy = true,
-                message = "Reformulation IA « " + state.style + " » — " + state.rewriteIntensity.lowercase() + "…"
+                onlineAvailable = online,
+                message = if (online) "Reformulation en ligne — " + state.style + "…" else "Aucune connexion : reformulation locale…"
             )
 
             val (prepared, restore) = memory.protect(original)
-            val outputType = when (state.style) {
-                "Professionnel", "Formel" -> RewriterOptions.OutputType.PROFESSIONAL
-                "Simple", "Concis" -> RewriterOptions.OutputType.SHORTEN
-                "Chaleureux", "Amical" -> RewriterOptions.OutputType.FRIENDLY
-                "Détaillé" -> RewriterOptions.OutputType.ELABORATE
-                "Créatif", "Humanisé", "Naturel" -> RewriterOptions.OutputType.REPHRASE
-                else -> RewriterOptions.OutputType.REPHRASE
+            val key = memory.openAiApiKey()
+            var result: String? = null
+            var mode: String
+
+            if (online) {
+                if (key.isNotBlank()) {
+                    result = withContext(Dispatchers.IO) {
+                        OnlineRewriter.rewrite(prepared, state.style, state.rewriteIntensity, key)
+                    }
+                    mode = if (result != null) "IA en ligne" else "Service en ligne indisponible"
+                } else {
+                    mode = "Internet sans accès IA"
+                }
+
+                if (result == null) {
+                    result = "Internet est disponible. Configurez l’accès IA dans ☰ > Connexion et IA en ligne pour reformuler. Le moteur local reste désactivé tant qu’Internet est disponible."
+                }
+            } else {
+                val aiResult = ai.rewriteFrench(
+                    prepared,
+                    when (state.style) {
+                        "Professionnel", "Formel" -> RewriterOptions.OutputType.PROFESSIONAL
+                        "Simple", "Concis" -> RewriterOptions.OutputType.SHORTEN
+                        "Chaleureux", "Amical" -> RewriterOptions.OutputType.FRIENDLY
+                        "Détaillé" -> RewriterOptions.OutputType.ELABORATE
+                        else -> RewriterOptions.OutputType.REPHRASE
+                    }
+                )
+                result = aiResult ?: withContext(Dispatchers.Default) {
+                    OfflineFrenchCorrector.naturalRewrite(LanguageToolCorrector.correct(prepared))
+                }
+                mode = if (aiResult != null) "IA locale hors ligne" else "Correcteur local hors ligne"
             }
 
-            val aiResult = ai.rewriteFrench(prepared, outputType)
-            var result = aiResult ?: withContext(Dispatchers.Default) {
-                OfflineFrenchCorrector.naturalRewrite(LanguageToolCorrector.correct(prepared))
-            }
-
-            if (aiResult != null && state.rewriteIntensity == "Fort" &&
-                state.style in setOf("Humanisé", "Naturel", "Créatif")
-            ) {
-                result = ai.rewriteFrench(result, RewriterOptions.OutputType.REPHRASE) ?: result
-            }
-
-            result = memory.restore(result, restore)
+            result = memory.restore(result.orEmpty(), restore)
             result = memory.personalize(result)
-
-            val mode = if (aiResult != null) "IA locale" else "Hors connexion"
-            memory.save(original, result, "Reformulation • " + state.style + " • " + state.rewriteIntensity)
+            memory.save(original, result, "Reformulation • " + state.style + " • " + state.rewriteIntensity + " • " + mode)
 
             _uiState.value = _uiState.value.copy(
                 output = result,
                 busy = false,
-                message = "Reformulation terminée — $mode • préférences appliquées.",
+                onlineAvailable = online,
+                openAiConnected = memory.openAiApiKey().isNotBlank(),
+                message = if (online && key.isBlank()) "Internet détecté : moteur local désactivé. Configurez l’IA en ligne." else "Reformulation terminée — " + mode + ".",
                 history = memory.history()
             )
         }
