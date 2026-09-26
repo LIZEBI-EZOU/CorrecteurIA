@@ -12,7 +12,14 @@ android {
         targetSdk = 36
         versionCode = 4
         versionName = "1.3.0"
-        buildConfigField("String", "CORRECTEURIA_API_BASE_URL", """ + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + """)
+        buildConfigField(
+            "String",
+            "CORRECTEURIA_API_BASE_URL",
+            providers.gradleProperty("CORRECTEURIA_API_BASE_URL")
+                .map { value -> "\"$value\"" }
+                .orElse("\"https://correcteuria-api.onrender.com\"")
+                .get()
+        )
     }
     buildFeatures { compose = true; buildConfig = true }
     signingConfigs {
@@ -69,7 +76,6 @@ dependencies {
         exclude(group = "jakarta.activation", module = "jakarta.activation-api")
         exclude(group = "jakarta.xml.bind", module = "jakarta.xml.bind-api")
         exclude(group = "org.eclipse.angus", module = "angus-activation")
-        exclude(group = "jakarta.xml.bind", module = "jakarta.xml.bind-api")
     }
     implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
     implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")
