@@ -25,7 +25,7 @@ class MemoryStore(context:Context){
  fun learnReplacement(from:String,to:String){
   if(from.isBlank()||to.isBlank())return
   val old=learnedReplacements().toMutableMap();old[from.trim()]=to.trim()
-  val a=JSONArray();old.entries.takeLast(100).forEach{a.put(JSONObject().put("from",it.key).put("to",it.value))}
+  val a=JSONArray();old.entries.toList().takeLast(100).forEach{a.put(JSONObject().put("from",it.key).put("to",it.value))}
   p.edit().putString("learned_replacements",a.toString()).apply()
  }
  fun removeReplacement(from:String){
