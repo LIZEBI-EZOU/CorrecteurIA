@@ -62,7 +62,6 @@ fun CorrecteurApp(vm: CorrecteurViewModel = viewModel()) {
     var protectedWord by remember { mutableStateOf("") }
     var from by remember { mutableStateOf("") }
     var to by remember { mutableStateOf("") }
-    var apiKey by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { vm.refreshConnectivity() }
 
@@ -104,64 +103,45 @@ fun CorrecteurApp(vm: CorrecteurViewModel = viewModel()) {
                             colors = CardDefaults.cardColors(containerColor = SoftGreen)
                         ) {
                             Column(Modifier.padding(14.dp)) {
-                                Text("🌐 État Internet", fontWeight = FontWeight.Bold, color = GreenDark)
+                                Text("🌐 Réseau & serveur CorrecteurIA", fontWeight = FontWeight.Bold, color = GreenDark)
                                 Text(
-                                    if (state.onlineAvailable) "Connecté — la reformulation locale est désactivée."
-                                    else "Hors connexion — la reformulation locale est autorisée.",
+                                    when {
+                                        !state.onlineAvailable -> "Hors connexion — reformulation locale autorisée."
+                                        state.serverAvailable -> "Internet + serveur CorrecteurIA opérationnels."
+                                        else -> "Internet disponible, mais le serveur est momentanément indisponible."
+                                    },
                                     style = MaterialTheme.typography.bodySmall
                                 )
                                 Spacer(Modifier.height(6.dp))
                                 OutlinedButton(onClick = vm::refreshConnectivity) {
-                                    Text("Actualiser")
+                                    Text("Vérifier maintenant")
                                 }
                             }
                         }
 
                         Text("🤖 IA en ligne", fontWeight = FontWeight.Bold, color = Red)
                         Text(
-                            "Pour utiliser l’IA en ligne depuis l’application, ajoutez votre clé API personnelle. Elle est conservée chiffrée sur l’appareil et n’est jamais incluse dans l’APK.",
+                            "L’application ne contient aucune clé OpenAI. La clé reste uniquement sur le serveur intermédiaire CorrecteurIA, puis le serveur appelle l’API OpenAI. Cela évite d’exposer une clé secrète dans l’APK.",
                             style = MaterialTheme.typography.bodySmall
                         )
-                        OutlinedTextField(
-                            value = apiKey,
-                            onValueChange = { apiKey = it },
-                            modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Clé API") },
-                            placeholder = { Text("sk-…") },
-                            singleLine = true
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = {
-                                    vm.setOpenAiApiKey(apiKey)
-                                    apiKey = ""
-                                },
-                                enabled = apiKey.isNotBlank(),
-                                colors = ButtonDefaults.buttonColors(containerColor = Green)
-                            ) { Text("Enregistrer") }
-                            OutlinedButton(onClick = vm::clearOpenAiApiKey) { Text("Retirer") }
-                        }
-                        if (state.openAiConnected) {
-                            Text("✓ Accès IA en ligne configuré", color = GreenDark, fontWeight = FontWeight.Bold)
+                        if (state.serverAvailable) {
+                            Text("✓ Serveur IA CorrecteurIA disponible", color = GreenDark, fontWeight = FontWeight.Bold)
+                        } else if (state.onlineAvailable) {
+                            Text("⚠ Serveur IA non joignable pour le moment", color = Red, fontWeight = FontWeight.Bold)
                         }
 
                         OutlinedButton(
                             onClick = { openWeb(activity, "https://chatgpt.com/") },
                             modifier = Modifier.fillMaxWidth()
-                        ) { Text("💬 Ouvrir / connecter ChatGPT") }
+                        ) { Text("💬 Ouvrir ChatGPT") }
 
                         OutlinedButton(
                             onClick = { openWeb(activity, "https://accounts.google.com/") },
                             modifier = Modifier.fillMaxWidth()
-                        ) { Text("G Se connecter avec Google") }
-
-                        OutlinedButton(
-                            onClick = { openWeb(activity, "https://platform.openai.com/api-keys") },
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text("🔑 Obtenir une clé API") }
+                        ) { Text("G Ouvrir Google") }
 
                         Text(
-                            "Important : une connexion à ChatGPT ou à Google dans le navigateur ne donne pas automatiquement à une application Android un accès API. L’API OpenAI utilise une clé API et sa facturation est séparée de l’abonnement ChatGPT.",
+                            "Les boutons ChatGPT et Google ouvrent leurs sites officiels. Ils ne remplacent pas une authentification OAuth native. L’IA de l’application passe par le serveur CorrecteurIA.",
                             style = MaterialTheme.typography.labelSmall
                         )
 
@@ -305,7 +285,7 @@ fun CorrecteurApp(vm: CorrecteurViewModel = viewModel()) {
 
                     HorizontalDivider()
                     Text("✨ Reformulation IA", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = Red)
-                    Text("Choisissez un style et une intensité. Si Internet est disponible, l’app utilise l’IA en ligne configurée. Sinon elle bascule automatiquement vers le moteur local.", style = MaterialTheme.typography.bodySmall)
+                    Text("Choisissez un style et une intensité. Si Internet est disponible, l’app passe par le serveur CorrecteurIA. Le moteur local de reformulation n’est utilisé que lorsque l’app est réellement hors connexion.", style = MaterialTheme.typography.bodySmall)
 
                     Text("🎯 Style", fontWeight = FontWeight.Bold, color = GreenDark)
                     val styles = listOf("Standard", "Humanisé", "Naturel", "Professionnel", "Formel", "Simple", "Chaleureux", "Amical", "Concis", "Détaillé", "Créatif")
