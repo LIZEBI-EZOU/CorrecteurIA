@@ -109,6 +109,15 @@ function rewriteInstructions(style, intensity) {
   ].join("\n");
 }
 
+app.get("/", (_req, res) => {
+  res.json({
+    status: "ok",
+    service: "CorrecteurIA Server",
+    message: "API CorrecteurIA opérationnelle",
+    endpoints: ["/health", "/ready", "/v1/correct", "/v1/rewrite"]
+  });
+});
+
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
@@ -170,6 +179,10 @@ app.post("/v1/rewrite", rewriteLimiter, async (req, res) => {
         status: response.status,
         error: json?.error?.code || json?.error?.type || "unknown"
       }));
+      const upstreamCode = json?.error?.code || json?.error?.type || "unknown";
+      if (response.status === 429 && upstreamCode === "credit_balance_exhausted") {
+        return errorResponse(res, 503, "AI_CREDIT_REQUIRED", "Le service IA distant nécessite un crédit API disponible.", req.requestId);
+      }
       return errorResponse(res, 502, "AI_UPSTREAM_ERROR", "Le service IA distant a refusé ou interrompu la requête.", req.requestId);
     }
 
