@@ -3,11 +3,18 @@ package com.correcteur.ia
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import kotlinx.coroutines.delay
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
 object OnlineRewriter {
+    private const val MAX_ATTEMPTS = 3
+    private const val HEALTH_CONNECT_TIMEOUT_MS = 10000
+    private const val HEALTH_READ_TIMEOUT_MS = 15000
+    private const val API_CONNECT_TIMEOUT_MS = 10000
+    private const val API_READ_TIMEOUT_MS = 60000
+
     private val baseUrl: String
         get() = BuildConfig.CORRECTEURIA_API_BASE_URL.trimEnd('/')
 
@@ -19,44 +26,61 @@ object OnlineRewriter {
             capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
-    suspend fun serverAvailable(): Boolean = try {
-        val connection = (URL("$baseUrl/health").openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 4000
-            readTimeout = 5000
+    private suspend fun <T> withRetry(block: () -> T?): T? {
+        var result: T? = null
+        repeat(MAX_ATTEMPTS) { attempt ->
+            result = try { block() } catch (_: Throwable) { null }
+            if (result != null) return result
+            if (attempt < MAX_ATTEMPTS - 1) delay(1000L * (attempt + 1))
         }
-        connection.responseCode in 200..299
-    } catch (_: Throwable) {
-        false
+        return result
     }
+
+    suspend fun serverAvailable(): Boolean = withRetry {
+        (URL("$baseUrl/health").openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = HEALTH_CONNECT_TIMEOUT_MS
+            readTimeout = HEALTH_READ_TIMEOUT_MS
+            useCaches = false
+        }.let { connection ->
+            try {
+                connection.responseCode in 200..299
+            } finally {
+                connection.disconnect()
+            }
+        }
+    } ?: false
 
     suspend fun rewrite(
         text: String,
         style: String,
         intensity: String
-    ): String? = try {
+    ): String? = withRetry {
         val connection = (URL("$baseUrl/v1/rewrite").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
-            connectTimeout = 7000
-            readTimeout = 40000
+            connectTimeout = API_CONNECT_TIMEOUT_MS
+            readTimeout = API_READ_TIMEOUT_MS
             doOutput = true
+            useCaches = false
+            setRequestProperty("Connection", "close")
             setRequestProperty("Content-Type", "application/json")
             setRequestProperty("Accept", "application/json")
         }
 
-        val body = JSONObject()
-            .put("text", text)
-            .put("style", style)
-            .put("intensity", intensity)
-            .toString()
+        try {
+            val body = JSONObject()
+                .put("text", text)
+                .put("style", style)
+                .put("intensity", intensity)
+                .toString()
 
-        connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+            connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+            if (connection.responseCode !in 200..299) return@withRetry null
 
-        if (connection.responseCode !in 200..299) return null
-
-        val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-        json.optString("output").takeIf { it.isNotBlank() }
-    } catch (_: Throwable) {
-        null
+            val json = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+            json.optString("output").takeIf { it.isNotBlank() }
+        } finally {
+            connection.disconnect()
+        }
     }
 }
