@@ -6,7 +6,7 @@ import java.net.URL
 
 object InternetCorrector {
     suspend fun correct(text: String): String? = try {
-        val baseUrl = BuildConfig.CORRECTEURIA_API_BASE_URL.trimEnd("/")
+        val baseUrl = BuildConfig.CORRECTEURIA_API_BASE_URL.trimEnd('/')
         val connection = (URL("$baseUrl/v1/correct").openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = 7000
