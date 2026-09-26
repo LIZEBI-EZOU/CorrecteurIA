@@ -53,8 +53,15 @@ dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("org.languagetool:language-fr:6.6.12-3") {
+    implementation("org.languagetool:language-fr:6.6") {
         exclude(group = "com.intellij", module = "annotations")
+        exclude(group = "com.sun.xml.bind", module = "jaxb-core")
+        exclude(group = "org.glassfish.jaxb", module = "jaxb-runtime")
+        exclude(group = "org.glassfish.jaxb", module = "jaxb-core")
+        exclude(group = "org.glassfish.jaxb", module = "txw2")
+        exclude(group = "com.sun.activation", module = "jakarta.activation")
+        exclude(group = "jakarta.activation", module = "jakarta.activation-api")
+        exclude(group = "org.eclipse.angus", module = "angus-activation")
     }
     implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
     implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")
