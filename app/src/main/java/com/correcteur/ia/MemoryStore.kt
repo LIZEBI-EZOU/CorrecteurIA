@@ -18,6 +18,10 @@ class MemoryStore(context: Context) {
     fun rewriteIntensity() = p.getString("rewrite_intensity", "Équilibré") ?: "Équilibré"
     fun setRewriteIntensity(value: String) = p.edit().putString("rewrite_intensity", value).apply()
 
+    fun openAiApiKey() = p.getString("openai_api_key", "") ?: ""
+    fun setOpenAiApiKey(value: String) = p.edit().putString("openai_api_key", value.trim()).apply()
+    fun clearOpenAiApiKey() = p.edit().remove("openai_api_key").apply()
+
     fun vocabulary(): List<String> = readStrings("vocabulary")
     fun protectedWords(): List<String> = readStrings("protected_words")
 
@@ -106,7 +110,7 @@ class MemoryStore(context: Context) {
 
     fun clearPersonalMemory() = p.edit()
         .remove("vocabulary").remove("protected_words").remove("learned_replacements")
-        .remove("style").remove("rewrite_intensity").apply()
+        .remove("style").remove("rewrite_intensity").remove("openai_api_key").apply()
 
     fun clear() = p.edit()
         .remove("history").remove("vocabulary").remove("protected_words")
