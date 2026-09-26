@@ -67,7 +67,7 @@ class MainActivity:ComponentActivity(){override fun onCreate(b:Bundle?){super.on
    Text("🎯 Style préféré",fontWeight=FontWeight.Bold,color=DeepBlue)
    Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){listOf("Standard","Professionnel","Simple","Chaleureux").forEach{style->FilterChip(selected=s.style==style,onClick={vm.setStyle(style)},label={Text(style)},colors=FilterChipDefaults.filterChipColors(selectedContainerColor=SoftBlue,selectedLabelColor=DeepBlue))}}
    HorizontalDivider()
-   Text("🧠 Mémoire personnelle avancée",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.ExtraBold,color=DeepBlue)
+   Text("✨ Reformulation IA avancée",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.ExtraBold,color=Red)\n   Text("Humanisation, variation des phrases, ton adapté et conservation du sens. Les styles Professionnel, Formel, Simple, Chaleureux, Naturel, Humanisé et Créatif utilisent l’IA locale lorsqu’elle est disponible.",style=MaterialTheme.typography.bodySmall)\n   Text("🧠 Mémoire personnelle avancée",style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.ExtraBold,color=DeepBlue)
    Text("Tout reste sur cet appareil : vocabulaire, mots protégés et corrections préférées.")
    OutlinedTextField(vocab,{vocab=it},Modifier.fillMaxWidth(),label={Text("Ajouter au vocabulaire")},singleLine=true,shape=RoundedCornerShape(14.dp))
    Button(onClick={if(vocab.isNotBlank()){vm.addVocabulary(vocab);vocab=""}},enabled=vocab.isNotBlank(),colors=ButtonDefaults.buttonColors(containerColor=Blue)){Text("➕ Mémoriser ce mot")}
