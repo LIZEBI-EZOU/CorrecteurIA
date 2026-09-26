@@ -12,7 +12,7 @@ android {
         targetSdk = 36
         versionCode = 4
         versionName = "1.3.0"
-        buildConfigField("String", "CORRECTEURIA_API_BASE_URL", "\"" + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + "\"")
+        buildConfigField("String", "CORRECTEURIA_API_BASE_URL", """ + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + """)
     }
     buildFeatures { compose = true; buildConfig = true }
     signingConfigs {
@@ -21,7 +21,11 @@ android {
             val storePasswordValue = providers.gradleProperty("RELEASE_STORE_PASSWORD").orNull
             val keyAliasValue = providers.gradleProperty("RELEASE_KEY_ALIAS").orNull
             val keyPasswordValue = providers.gradleProperty("RELEASE_KEY_PASSWORD").orNull
-            if (storeFilePath != null && storePasswordValue != null && keyAliasValue != null && keyPasswordValue != null) {
+            if (!storeFilePath.isNullOrBlank() &&
+                !storePasswordValue.isNullOrBlank() &&
+                !keyAliasValue.isNullOrBlank() &&
+                !keyPasswordValue.isNullOrBlank()
+            ) {
                 storeFile = file(storeFilePath)
                 storePassword = storePasswordValue
                 keyAlias = keyAliasValue
@@ -65,6 +69,7 @@ dependencies {
         exclude(group = "jakarta.activation", module = "jakarta.activation-api")
         exclude(group = "jakarta.xml.bind", module = "jakarta.xml.bind-api")
         exclude(group = "org.eclipse.angus", module = "angus-activation")
+        exclude(group = "jakarta.xml.bind", module = "jakarta.xml.bind-api")
     }
     implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
     implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")
