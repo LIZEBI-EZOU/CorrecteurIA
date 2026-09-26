@@ -32,7 +32,28 @@ class MainActivity:ComponentActivity(){override fun onCreate(b:Bundle?){super.on
 @Composable fun CorrecteurApp(vm:CorrecteurViewModel=viewModel()){
  val s by vm.uiState.collectAsState()
  var vocab by remember{mutableStateOf("")};var protected by remember{mutableStateOf("")};var from by remember{mutableStateOf("")};var to by remember{mutableStateOf("")}
- MaterialTheme(colorScheme=AppColors){Scaffold(containerColor=AppColors.background,topBar={TopAppBar(title={Column{Text("CorrecteurIA",fontWeight=FontWeight.ExtraBold);Text(if(s.internetEnabled)"⚡ Internet + hors connexion" else "🔒 Mode privé",style=MaterialTheme.typography.labelSmall)}}),colors=TopAppBarDefaults.topAppBarColors(containerColor=DeepBlue, titleContentColor=Color.White, navigationIconContentColor=Color.White)}){p->
+ MaterialTheme(colorScheme = AppColors) {
+  Scaffold(
+    containerColor = AppColors.background,
+    topBar = {
+      TopAppBar(
+        title = {
+          Column {
+            Text("CorrecteurIA", fontWeight = FontWeight.ExtraBold)
+            Text(
+              if (s.internetEnabled) "⚡ Internet + hors connexion" else "🔒 Mode privé",
+              style = MaterialTheme.typography.labelSmall
+            )
+          }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+          containerColor = DeepBlue,
+          titleContentColor = Color.White,
+          navigationIconContentColor = Color.White
+        )
+      )
+    }
+  ) { p ->
   Column(Modifier.padding(p).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal=16.dp,vertical=14.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
    Box(Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(Blue,DeepBlue,Red)),RoundedCornerShape(22.dp)).padding(20.dp)){Column{Text("CORRECTEUR INTELLIGENT",color=Color.White,style=MaterialTheme.typography.labelMedium,fontWeight=FontWeight.Bold);Text("Écrivez mieux. Plus vite. À votre façon.",color=Color.White,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.ExtraBold);Spacer(Modifier.height(6.dp));Text("IA locale • mémoire personnalisée • Internet optionnel",color=Color.White.copy(alpha=.9f))}}
    OutlinedTextField(s.input,vm::setInput,Modifier.fillMaxWidth().heightIn(min=210.dp),label={Text("Votre texte")},placeholder={Text("Écrivez ou collez votre texte ici…")},shape=RoundedCornerShape(16.dp))
