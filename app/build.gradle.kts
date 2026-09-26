@@ -1,7 +1,3 @@
-plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
-}
 android {
     namespace = "com.correcteur.ia"
     compileSdk = 36
@@ -11,7 +7,8 @@ android {
         targetSdk = 36
         versionCode = 3
         versionName = "1.2.0"
-        }
+        buildConfigField("String", "CORRECTEURIA_API_BASE_URL", "\"" + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + "\"")
+    }
     buildFeatures { compose = true; buildConfig = true }
     buildConfigField("String", "CORRECTEURIA_API_BASE_URL", "\"" + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + "\"")
     signingConfigs {
