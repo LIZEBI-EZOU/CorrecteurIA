@@ -11,7 +11,7 @@ android {
         targetSdk = 36
         versionCode = 3
         versionName = "1.2.0"
-    }
+        }
     buildFeatures { compose = true; buildConfig = true }
     buildConfigField("String", "CORRECTEURIA_API_BASE_URL", "\"" + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + "\"")
     signingConfigs {
