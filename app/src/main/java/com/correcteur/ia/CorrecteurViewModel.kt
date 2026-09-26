@@ -185,7 +185,7 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
                 message = when {
                     !online -> "Aucune connexion : reformulation locale hors ligne…"
                     server -> "Reformulation en ligne via CorrecteurIA — ${state.style}…"
-                    else -> "Internet disponible, serveur indisponible : la reformulation locale reste désactivée."
+                    else -> "Serveur en attente : tentative de reconnexion automatique…"
                 }
             )
 
@@ -204,7 +204,20 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
                 }
 
                 if (result == null) {
-                    result = "Internet est disponible mais le serveur CorrecteurIA n’est pas accessible. Le moteur local reste volontairement désactivé tant qu’Internet est disponible."
+                    val aiResult = ai.rewriteFrench(
+                        prepared,
+                        when (state.style) {
+                            "Professionnel", "Formel" -> RewriterOptions.OutputType.PROFESSIONAL
+                            "Simple", "Concis" -> RewriterOptions.OutputType.SHORTEN
+                            "Chaleureux", "Amical" -> RewriterOptions.OutputType.FRIENDLY
+                            "Détaillé" -> RewriterOptions.OutputType.ELABORATE
+                            else -> RewriterOptions.OutputType.REPHRASE
+                        }
+                    )
+                    result = aiResult ?: withContext(Dispatchers.Default) {
+                        OfflineFrenchCorrector.naturalRewrite(LanguageToolCorrector.correct(prepared))
+                    }
+                    mode = if (aiResult != null) "IA locale de secours" else "Correcteur local de secours"
                 }
             } else {
                 val aiResult = ai.rewriteFrench(
@@ -232,7 +245,7 @@ class CorrecteurViewModel(app: Application) : AndroidViewModel(app) {
                 busy = false,
                 onlineAvailable = online,
                 serverAvailable = server,
-                message = if (online && !server) "Serveur indisponible : moteur local désactivé tant qu’Internet est disponible." else "Reformulation terminée — " + mode + ".",
+                message = if (online && !server) "Serveur temporairement indisponible : moteur de secours utilisé. Reconnexion automatique au prochain essai." else "Reformulation terminée — " + mode + ".",
                 history = memory.history()
             )
         }
