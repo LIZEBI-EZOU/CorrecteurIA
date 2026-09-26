@@ -42,8 +42,7 @@ android {
     }
     buildTypes {
         release {
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            isMinifyEnabled = false
         }
     }
     packaging {
@@ -73,7 +72,7 @@ dependencies {
         exclude(group = "org.glassfish.jaxb", module = "jaxb-core")
         exclude(group = "org.glassfish.jaxb", module = "txw2")
         exclude(group = "com.sun.activation", module = "jakarta.activation")
-        exclude(group = "jakarta.activation", module = "jakarta.activation-api")
+        exclude(group = "com.sun.activation", module = "jakarta.activation-api")
         exclude(group = "jakarta.xml.bind", module = "jakarta.xml.bind-api")
         exclude(group = "org.eclipse.angus", module = "angus-activation")
     }
