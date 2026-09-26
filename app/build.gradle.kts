@@ -34,7 +34,12 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            pickFirsts += "com/sun/xml/bind/marshaller/Messages_ko.properties"
+        }
+    }
 }
 dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2026.04.01")
@@ -48,7 +53,9 @@ dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("org.languagetool:language-fr:6.6")
+    implementation("org.languagetool:language-fr:6.6") {
+        exclude(group = "com.intellij", module = "annotations")
+    }
     implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
     implementation("com.google.mlkit:genai-rewriting:1.0.0-beta1")
     debugImplementation("androidx.compose.ui:ui-tooling")
