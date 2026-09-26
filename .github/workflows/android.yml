@@ -42,7 +42,7 @@ jobs:
         run: gradle assembleDebug
 
       - name: Build release APK
-        run: gradle assembleRelease -PRELEASE_STORE_FILE="" -PRELEASE_STORE_PASSWORD="" -PRELEASE_KEY_ALIAS="" -PRELEASE_KEY_PASSWORD=""
+        run: gradle assembleRelease
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
