@@ -1,0 +1,5 @@
+-keep class org.languagetool.** { *; }
+-keep class org.carrot2.** { *; }
+-keep class org.morfologik.** { *; }
+-keep class com.gitlab.dumonts.** { *; }
+-keepnames class org.languagetool.** { *; }
