@@ -10,6 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://repo.languagetool.org/artifactory/languagetool-os-release/") }
     }
 }
 rootProject.name = "CorrecteurIA"
