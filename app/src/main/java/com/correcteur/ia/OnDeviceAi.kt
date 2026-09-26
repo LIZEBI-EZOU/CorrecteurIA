@@ -3,7 +3,6 @@ import android.content.Context
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.proofreading.*
 import com.google.mlkit.genai.rewriting.*
-import 
 class OnDeviceAi(private val context: Context) {
     private var proofreader: Proofreader? = null
     private var rewriter: Rewriter? = null
@@ -21,7 +20,7 @@ class OnDeviceAi(private val context: Context) {
         val options = RewriterOptions.builder(context).setOutputType(style).setLanguage(RewriterOptions.Language.FRENCH).build()
         val client = Rewriting.getClient(options); rewriter = client
         return try {
-            if (client.checkFeatureStatus().await() != FeatureStatus.AVAILABLE) null
+            if (client.checkFeatureStatus().get() != FeatureStatus.AVAILABLE) null
             else client.runInference(RewritingRequest.builder(text).build()).get().results.firstOrNull()?.text
         } catch (_: Throwable) { null }
     }
