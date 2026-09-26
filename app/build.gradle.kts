@@ -10,7 +10,6 @@ android {
         buildConfigField("String", "CORRECTEURIA_API_BASE_URL", "\"" + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + "\"")
     }
     buildFeatures { compose = true; buildConfig = true }
-    buildConfigField("String", "CORRECTEURIA_API_BASE_URL", "\"" + providers.gradleProperty("CORRECTEURIA_API_BASE_URL").orElse("https://correcteuria-api.onrender.com").get() + "\"")
     signingConfigs {
         create("release") {
             val storeFilePath = providers.gradleProperty("RELEASE_STORE_FILE").orNull
