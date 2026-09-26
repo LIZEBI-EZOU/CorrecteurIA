@@ -17,7 +17,7 @@ data class CorrecteurState(
  val message:String="Prêt — correction locale disponible.",
  val internetEnabled:Boolean=true,
  val history:List<MemoryItem> = emptyList(),
- val style:String="Standard",
+ val style:String="Standard",\n val rewriteIntensity:String="Équilibré",
  val vocabulary:List<String> = emptyList(),
  val protectedWords:List<String> = emptyList(),
  val learnedReplacements:Map<String,String> = emptyMap()
@@ -34,12 +34,12 @@ class CorrecteurViewModel(app:Application):AndroidViewModel(app){
 
  private fun refreshMemory(message:String?=null){
   _uiState.value=_uiState.value.copy(
-   style=memory.style(),vocabulary=memory.vocabulary(),protectedWords=memory.protectedWords(),
+   style=memory.style(),rewriteIntensity=memory.rewriteIntensity(),vocabulary=memory.vocabulary(),protectedWords=memory.protectedWords(),
    learnedReplacements=memory.learnedReplacements(),message=message ?: _uiState.value.message)
  }
  fun setInput(v:String){_uiState.value=_uiState.value.copy(input=v,output="")}
  fun setInternetEnabled(v:Boolean){memory.setInternetEnabled(v);_uiState.value=_uiState.value.copy(internetEnabled=v,message=if(v)"Mode Internet activé." else "Mode privé hors connexion activé.")}
- fun setStyle(v:String){memory.setStyle(v);refreshMemory("Style mémorisé : $v.")}
+ fun setStyle(v:String){memory.setStyle(v);refreshMemory("Style mémorisé : $v.")}\n fun setRewriteIntensity(v:String){memory.setRewriteIntensity(v);refreshMemory("Intensité de reformulation : $v.")}
 
  fun addVocabulary(v:String){memory.addVocabulary(v);refreshMemory("Mot ajouté au vocabulaire personnel.")}
  fun removeVocabulary(v:String){memory.removeVocabulary(v);refreshMemory("Mot retiré du vocabulaire.")}
@@ -77,7 +77,7 @@ class CorrecteurViewModel(app:Application):AndroidViewModel(app){
   viewModelScope.launch{
    _uiState.value=_uiState.value.copy(busy=true,message="Reformulation avec votre mémoire personnelle…")
    val (prepared,restore)=memory.protect(original)
-   val r:String?=if(prepared.length<=1200){ai.rewriteFrench(prepared,RewriterOptions.OutputType.REPHRASE)}else null
+   val style=_uiState.value.style\n   val intensity=_uiState.value.rewriteIntensity\n   val outputType=when(style){\n    "Professionnel","Formel" -> RewriterOptions.OutputType.PROFESSIONAL\n    "Simple" -> RewriterOptions.OutputType.SHORTEN\n    "Chaleureux","Amical" -> RewriterOptions.OutputType.FRIENDLY\n    "Détaillé" -> RewriterOptions.OutputType.ELABORATE\n    "Concis" -> RewriterOptions.OutputType.SHORTEN\n    "Créatif","Humanisé","Naturel" -> RewriterOptions.OutputType.REPHRASE\n    else -> RewriterOptions.OutputType.REPHRASE\n   }\n   val r:String?=if(prepared.length<=1200){ai.rewriteFrench(prepared,outputType)}else null
    var result=memory.restore(r ?: withContext(Dispatchers.Default){OfflineFrenchCorrector.naturalRewrite(LanguageToolCorrector.correct(prepared))},restore)
    result=memory.personalize(result)
    val mode=if(r!=null)"IA locale" else "Hors connexion"
@@ -88,7 +88,7 @@ class CorrecteurViewModel(app:Application):AndroidViewModel(app){
  fun loadHistory(i:MemoryItem){_uiState.value=_uiState.value.copy(input=i.input,output=i.output,message="Souvenir chargé depuis la mémoire locale.")}
  fun clearHistory(){memory.clearHistory();_uiState.value=_uiState.value.copy(history=emptyList(),message="Historique effacé.")}
  fun clearPersonalMemory(){memory.clearPersonalMemory();refreshMemory("Mémoire personnalisée effacée.")}
- fun clearMemory(){memory.clear();_uiState.value=_uiState.value.copy(history=emptyList(),vocabulary=emptyList(),protectedWords=emptyList(),learnedReplacements=emptyMap(),style="Standard",message="Toute la mémoire locale a été effacée.")}
+ fun clearMemory(){memory.clear();_uiState.value=_uiState.value.copy(history=emptyList(),vocabulary=emptyList(),protectedWords=emptyList(),learnedReplacements=emptyMap(),style="Standard",rewriteIntensity="Équilibré",message="Toute la mémoire locale a été effacée.")}
  fun useResult(){val r=_uiState.value.output;_uiState.value=_uiState.value.copy(input=r,output="")}
  fun clearOutput(){_uiState.value=_uiState.value.copy(output="",message="Prêt.")}
  override fun onCleared(){ai.close();super.onCleared()}
