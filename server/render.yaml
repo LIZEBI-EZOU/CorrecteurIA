@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: correcteuria-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.6-luna
+      - key: LANGUAGETOOL_URL
+        value: https://api.languagetool.org/v2/check
+      - key: MAX_TEXT_CHARS
+        value: "12000"
+      - key: REWRITE_RATE_LIMIT
+        value: "20"
+      - key: CORRECT_RATE_LIMIT
+        value: "40"
+      - key: METRICS_TOKEN
+        generateValue: true
