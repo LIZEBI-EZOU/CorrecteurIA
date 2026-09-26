@@ -12,9 +12,24 @@ android {
         versionName = "1.1.0"
     }
     buildFeatures { compose = true; buildConfig = true }
+    signingConfigs {
+        create("release") {
+            val storeFilePath = providers.gradleProperty("RELEASE_STORE_FILE").orNull
+            val storePasswordValue = providers.gradleProperty("RELEASE_STORE_PASSWORD").orNull
+            val keyAliasValue = providers.gradleProperty("RELEASE_KEY_ALIAS").orNull
+            val keyPasswordValue = providers.gradleProperty("RELEASE_KEY_PASSWORD").orNull
+            if (storeFilePath != null && storePasswordValue != null && keyAliasValue != null && keyPasswordValue != null) {
+                storeFile = file(storeFilePath)
+                storePassword = storePasswordValue
+                keyAlias = keyAliasValue
+                keyPassword = keyPasswordValue
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
