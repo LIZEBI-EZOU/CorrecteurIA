@@ -1,3 +1,8 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.plugin.compose")
+}
+
 android {
     namespace = "com.correcteur.ia"
     compileSdk = 36
