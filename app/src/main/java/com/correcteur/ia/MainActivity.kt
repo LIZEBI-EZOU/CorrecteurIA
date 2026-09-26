@@ -120,8 +120,7 @@ fun CorrecteurApp(vm: CorrecteurViewModel = viewModel()) {
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    "Écrivez mieux.
-À votre façon.",
+                                    "Écrivez mieux. À votre façon.",
                                     color = Color.White,
                                     style = MaterialTheme.typography.headlineSmall,
                                     fontWeight = FontWeight.ExtraBold
