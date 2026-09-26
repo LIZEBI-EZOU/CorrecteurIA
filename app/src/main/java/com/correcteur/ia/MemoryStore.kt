@@ -10,7 +10,7 @@ class MemoryStore(context:Context){
  private val p=context.getSharedPreferences("correcteur_memory",Context.MODE_PRIVATE)
  fun isInternetEnabled()=p.getBoolean("internet_enabled",true)
  fun setInternetEnabled(v:Boolean)=p.edit().putBoolean("internet_enabled",v).apply()
- fun style()=p.getString("style","Standard") ?: "Standard"
+ fun style()=p.getString("style","Standard") ?: "Standard"\n fun rewriteIntensity()=p.getString("rewrite_intensity","Équilibré") ?: "Équilibré"\n fun setRewriteIntensity(v:String)=p.edit().putString("rewrite_intensity",v).apply()
  fun setStyle(v:String)=p.edit().putString("style",v).apply()
  fun vocabulary():List<String> = readStrings("vocabulary")
  fun protectedWords():List<String> = readStrings("protected_words")
@@ -58,7 +58,7 @@ class MemoryStore(context:Context){
   return buildList{for(i in 0 until a.length()){val o=a.getJSONObject(i);add(MemoryItem(o.optString("input"),o.optString("output"),o.optString("mode"),o.optLong("time")))}}
  }
  fun clearHistory()=p.edit().remove("history").apply()
- fun clearPersonalMemory()=p.edit().remove("vocabulary").remove("protected_words").remove("learned_replacements").remove("style").apply()
+ fun clearPersonalMemory()=p.edit().remove("vocabulary").remove("protected_words").remove("learned_replacements").remove("style").remove("rewrite_intensity").apply()
  fun clear()=p.edit().remove("history").remove("vocabulary").remove("protected_words").remove("learned_replacements").remove("style").apply()
  private fun readStrings(key:String):List<String>{val a=JSONArray(p.getString(key,"[]"));return buildList{for(i in 0 until a.length())add(a.optString(i))}}
  private fun addString(key:String,value:String){
