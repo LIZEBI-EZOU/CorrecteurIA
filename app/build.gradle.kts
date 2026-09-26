@@ -53,7 +53,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
-    implementation("org.languagetool:language-fr:6.6") {
+    implementation("org.languagetool:language-fr:6.6.12-3") {
         exclude(group = "com.intellij", module = "annotations")
     }
     implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
