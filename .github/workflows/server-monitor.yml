@@ -2,12 +2,13 @@ name: CorrecteurIA Server Monitor
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
   health:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - name: Check production health
         env:
@@ -15,8 +16,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "Checking $SERVER_URL/health"
-          curl --fail --silent --show-error --max-time 15 "$SERVER_URL/health"
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 30 "$SERVER_URL/health"
           echo
           echo "Checking $SERVER_URL/ready"
-          curl --fail --silent --show-error --max-time 15 "$SERVER_URL/ready"
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 30 "$SERVER_URL/ready"
           echo
