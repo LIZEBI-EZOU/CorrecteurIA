@@ -38,6 +38,7 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             pickFirsts += "com/sun/xml/bind/marshaller/Messages_ko.properties"
+            pickFirsts += "META-INF/LICENSE.md"
         }
     }
 }
@@ -61,6 +62,7 @@ dependencies {
         exclude(group = "org.glassfish.jaxb", module = "txw2")
         exclude(group = "com.sun.activation", module = "jakarta.activation")
         exclude(group = "jakarta.activation", module = "jakarta.activation-api")
+        exclude(group = "jakarta.xml.bind", module = "jakarta.xml.bind-api")
         exclude(group = "org.eclipse.angus", module = "angus-activation")
     }
     implementation("com.google.mlkit:genai-proofreading:1.0.0-beta1")
